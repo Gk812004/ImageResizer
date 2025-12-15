@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Resizer & Compressor</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338ca;
+            --bg: #F3F4F6;
+            --card-bg: #ffffff;
+            --text: #1F2937;
+            --border: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: #111827;
+        }
+
+        p.subtitle {
+            color: #6B7280;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--primary);
+            background-color: #EEF2FF;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            background-color: #E0E7FF;
+        }
+
+        .upload-area.drag-active {
+            background-color: #C7D2FE;
+            border-color: #3730A3;
+        }
+
+        .upload-area input {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Editor Section (Hidden by default) */
+        .editor-section {
+            display: none;
+            margin-top: 2rem;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preview-container {
+            width: 100%;
+            height: 200px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            margin-top: -0.5rem;
+        }
+
+        /* Compression Section */
+        .compression-section {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #fcfcfc;
+        }
+
+        .compression-header {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .compression-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .radio-label input {
+            cursor: pointer;
+        }
+
+        /* Stats Badge */
+        .file-info {
+            background-color: #F9FAFB;
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #4B5563;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-item span {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Download Button */
+        .download-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.85rem;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .download-btn:disabled {
+            background-color: #9CA3AF;
+            cursor: not-allowed;
+        }
+        
+        /* Reset Link */
+        .reset-link {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .reset-link button {
+            background: none;
+            border: none;
+            color: #6B7280;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        /* Hidden / Disabled States */
+        .hidden {
+            display: none !important;
+        }
+        
+        .disabled-section {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Helper text */
+        .helper-text {
+            font-size: 0.75rem;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+        
+        .range-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Image Resizer</h1>
+            <p class="subtitle">Resize pixel dimensions & compress file size</p>
+        </header>
+
+        <!-- Upload Section -->
+        <div class="upload-area" id="drop-zone">
+            <span class="upload-icon">📂</span>
+            <p><strong>Click to upload</strong> or drag and drop</p>
+            <p style="font-size: 0.8rem; color: #9CA3AF;">Supports JPG, PNG, WEBP</p>
+            <input type="file" id="file-input" accept="image/png, image/jpeg, image/webp">
+        </div>
+
+        <!-- Editor Section -->
+        <div class="editor-section" id="editor">
+            
+            <div class="preview-container">
+                <img id="preview-img" src="" alt="Preview">
+            </div>
+
+            <div class="controls">
+                
+                <!-- Dimensions -->
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <label>Width (px)</label>
+                        <input type="number" id="width-input">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Height (px)</label>
+                        <input type="number" id="height-input">
+                    </div>
+                </div>
+
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="aspect-ratio" checked>
+                    <label for="aspect-ratio">Lock Aspect Ratio</label>
+                </div>
+
+                <!-- Format Selection -->
+                <div class="input-wrapper">
+                    <label>Output Format</label>
+                    <select id="format-select">
+                        <option value="image/jpeg">JPG / JPEG</option>
+                        <option value="image/png">PNG (Lossless)</option>
+                        <option value="image/webp">WEBP</option>
+                    </select>
+                </div>
+
+                <!-- Compression Section -->
+                <div class="compression-section" id="compression-container">
+                    <div class="compression-header">Compression Settings</div>
+                    
+                    <div class="compression-options">
+                        <label class="radio-label">
+                            <input type="radio" name="comp-mode" value="quality" checked>
+                            By Quality %
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="comp-mode" value="size">
+                            Target File Size
+                        </label>
+                    </div>
+
+                    <!-- Mode A: Quality Slider -->
+                    <div id="mode-quality">
+                        <div style="display: flex; justify-content: space-between;">
+                            <label style="font-size: 0.8rem;">Quality Level</label>
+                            <span id="quality-val" style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">80%</span>
+                        </div>
+                        <input type="range" id="quality-slider" min="1" max="100" value="80">
+                        <p class="helper-text">Lower % = Smaller file size</p>
+                    </div>
+
+                    <!-- Mode B: Target Size (Range) -->
+                    <div id="mode-size" class="hidden">
+                        <div class="range-inputs">
+                            <div class="input-wrapper">
+                                <label style="font-size: 0.8rem;">Min (KB)</label>
+                                <input type="number" id="min-kb" placeholder="e.g. 10" value="10">
+                            </div>
+                            <div class="input-wrapper">
+                                <label style="font-size: 0.8rem;">Max (KB)</label>
+                                <input type="number" id="max-kb" placeholder="e.g. 20" value="20">
+                            </div>
+                        </div>
+                        <p class="helper-text">
+                            We'll adjust quality to fit Max.<br>
+                            If result is too small, we'll <strong>add safe padding</strong> to hit Min.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- File Info -->
+                <div class="file-info">
+                    <div class="info-item">Original: <span id="orig-size">0 KB</span></div>
+                    <div class="info-item">Format: <span id="file-format">JPG</span></div>
+                </div>
+
+                <button class="download-btn" id="download-btn">
+                    <span>⬇️ Download Image</span>
+                </button>
+            </div>
+
+            <div class="reset-link">
+                <button id="reset-btn">Upload a different image</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const editor = document.getElementById('editor');
+        const previewImg = document.getElementById('preview-img');
+        const widthInput = document.getElementById('width-input');
+        const heightInput = document.getElementById('height-input');
+        const ratioCheckbox = document.getElementById('aspect-ratio');
+        const formatSelect = document.getElementById('format-select');
+        const downloadBtn = document.getElementById('download-btn');
+        const origSizeSpan = document.getElementById('orig-size');
+        const formatSpan = document.getElementById('file-format');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Compression UI Elements
+        const compContainer = document.getElementById('compression-container');
+        const modeRadios = document.querySelectorAll('input[name="comp-mode"]');
+        const modeQuality = document.getElementById('mode-quality');
+        const modeSize = document.getElementById('mode-size');
+        const qualitySlider = document.getElementById('quality-slider');
+        const qualityVal = document.getElementById('quality-val');
+        const minKbInput = document.getElementById('min-kb');
+        const maxKbInput = document.getElementById('max-kb');
+
+        let originalRatio = 0;
+        let originalFile = null;
+
+        // 1. Drag & Drop Visuals
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-active');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-active');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile(files[0]);
+        });
+
+        // 2. File Input Change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        // 3. Load File logic
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+
+            originalFile = file;
+            
+            // Show original size
+            origSizeSpan.textContent = formatBytes(file.size);
+            
+            // Set initial format display
+            updateFormatLabel(file.type);
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                previewImg.onload = () => {
+                    widthInput.value = previewImg.naturalWidth;
+                    heightInput.value = previewImg.naturalHeight;
+                    originalRatio = previewImg.naturalWidth / previewImg.naturalHeight;
+                    
+                    dropZone.style.display = 'none';
+                    editor.style.display = 'block';
+                    
+                    // Default values logic
+                    // If image is large, default max is reasonable.
+                    // If image is tiny, we keep the default 10-20.
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // 4. Aspect Ratio Logic
+        widthInput.addEventListener('input', () => {
+            if (ratioCheckbox.checked && originalRatio) {
+                const w = parseFloat(widthInput.value);
+                if (!isNaN(w)) heightInput.value = Math.round(w / originalRatio);
+            }
+        });
+
+        heightInput.addEventListener('input', () => {
+            if (ratioCheckbox.checked && originalRatio) {
+                const h = parseFloat(heightInput.value);
+                if (!isNaN(h)) widthInput.value = Math.round(h * originalRatio);
+            }
+        });
+
+        // 5. Compression Mode Switching
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'quality') {
+                    modeQuality.classList.remove('hidden');
+                    modeSize.classList.add('hidden');
+                } else {
+                    modeQuality.classList.add('hidden');
+                    modeSize.classList.remove('hidden');
+                }
+            });
+        });
+
+        qualitySlider.addEventListener('input', () => {
+            qualityVal.innerText = `${qualitySlider.value}%`;
+        });
+
+        // 6. Format Change Logic
+        formatSelect.addEventListener('change', () => {
+            const fmt = formatSelect.value;
+            // PNG cannot be compressed via quality API
+            if (fmt === 'image/png') {
+                compContainer.classList.add('disabled-section');
+            } else {
+                compContainer.classList.remove('disabled-section');
+            }
+            
+            let label = 'JPG';
+            if (fmt === 'image/png') label = 'PNG';
+            if (fmt === 'image/webp') label = 'WEBP';
+            formatSpan.textContent = label;
+        });
+
+        // 7. Download Logic (Async for Size Calculation)
+        downloadBtn.addEventListener('click', async () => {
+            if (!originalFile) return;
+            
+            const originalBtnText = downloadBtn.innerHTML;
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<span>⏳ Processing...</span>';
+
+            // Wait a tick
+            await new Promise(r => setTimeout(r, 50));
+
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                const w = parseInt(widthInput.value);
+                const h = parseInt(heightInput.value);
+
+                if (!w || !h) throw new Error('Invalid dimensions');
+
+                canvas.width = w;
+                canvas.height = h;
+
+                // Better scaling quality
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                // Draw white background first (for JPG transparency issues)
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(previewImg, 0, 0, w, h);
+
+                const format = formatSelect.value;
+                let blob;
+
+                // Determine compression method
+                const isPng = format === 'image/png';
+                const mode = document.querySelector('input[name="comp-mode"]:checked').value;
+
+                if (isPng) {
+                    // PNG: No quality options
+                    blob = await new Promise(resolve => canvas.toBlob(resolve, format));
+                } 
+                else if (mode === 'quality') {
+                    // Manual Quality Mode
+                    const q = parseInt(qualitySlider.value) / 100;
+                    blob = await new Promise(resolve => canvas.toBlob(resolve, format, q));
+                } 
+                else {
+                    // Target Size Mode
+                    const minBytes = parseInt(minKbInput.value) * 1024;
+                    const maxBytes = parseInt(maxKbInput.value) * 1024;
+
+                    if (!maxBytes) {
+                        alert("Please enter a valid max size.");
+                        throw new Error('Invalid target size');
+                    }
+                    
+                    // 1. Find blob that fits under MAX
+                    blob = await findOptimalQuality(canvas, format, maxBytes);
+
+                    // 2. Check if under MIN. If so, Pad it.
+                    if (minBytes && blob.size < minBytes) {
+                        const paddingNeeded = minBytes - blob.size;
+                        console.log(`Padding needed: ${paddingNeeded} bytes`);
+                        
+                        // Create zero-filled padding
+                        const padding = new Uint8Array(paddingNeeded);
+                        
+                        // New blob with padding
+                        blob = new Blob([blob, padding], { type: format });
+                    }
+                }
+
+                // Download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                let ext = 'jpg';
+                if (format === 'image/png') ext = 'png';
+                if (format === 'image/webp') ext = 'webp';
+
+                a.download = `resized_${Date.now()}.${ext}`; 
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (err) {
+                if (err.message !== 'Invalid target size') {
+                   console.error(err);
+                   alert("An error occurred: " + err.message);
+                }
+            } finally {
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = originalBtnText;
+            }
+        });
+
+        // Algorithm to find quality closest to target size (Max limit)
+        async function findOptimalQuality(canvas, format, maxBytes) {
+            let min = 0.01;
+            let max = 1.0;
+            let bestBlob = null;
+            
+            // Check max quality first
+            const maxBlob = await new Promise(r => canvas.toBlob(r, format, 1.0));
+            if (maxBlob.size <= maxBytes) return maxBlob;
+
+            // Binary search for optimal quality
+            for (let i = 0; i < 6; i++) {
+                let mid = (min + max) / 2;
+                let blob = await new Promise(r => canvas.toBlob(r, format, mid));
+                
+                if (blob.size > maxBytes) {
+                    max = mid; // Too big, need lower quality
+                } else {
+                    min = mid; // Fits, try higher quality?
+                    bestBlob = blob; // Keep track of last valid blob
+                }
+            }
+
+            // Return best valid blob, or the smallest possible one if none fit
+            return bestBlob || await new Promise(r => canvas.toBlob(r, format, 0.01));
+        }
+
+        // 8. Reset
+        resetBtn.addEventListener('click', () => {
+            originalFile = null;
+            fileInput.value = '';
+            editor.style.display = 'none';
+            dropZone.style.display = 'block';
+            
+            formatSelect.value = 'image/jpeg';
+            compContainer.classList.remove('disabled-section');
+            modeRadios[0].checked = true;
+            modeRadios[0].dispatchEvent(new Event('change'));
+        });
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function updateFormatLabel(mimeType) {
+            let label = mimeType.split('/')[1].toUpperCase();
+            if (label === 'JPEG') label = 'JPG';
+            formatSpan.textContent = label;
+        }
+
+    </script>
+</body>
+</html>
